@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from Serial import t, px1, px2, px3, py1, py2, py3, pz1, pz2, pz3
-
+#Push Test
 # Function to generate joint positions using externally provided lists
 def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
     x_positions = x_lists[joint_index]
