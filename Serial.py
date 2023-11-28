@@ -76,7 +76,6 @@ def euler(accelerations, timestamps):
         # Calculate velocity using Euler's method
         #new_velocity = velocities[-1] + (accelerations[i]/accelerations[0]) * delta_t
         new_velocity = (accelerations[i] - accelerations[i-1]) * delta_t * 9.81
-        print("accelerations:", accelerations[i], "time", delta_t, "old speed", velocities[-1])
         velocities.append(new_velocity)
 
         # Calculate position using velocity and Euler's method
