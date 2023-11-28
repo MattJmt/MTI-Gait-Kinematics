@@ -63,12 +63,62 @@ ax3 = output_array[:,7]     # IMU 3
 ay3 = output_array[:,8]
 az3 = output_array[:,9]
 
+## rotation matrix
+# convert raw xyz accelerations to intertial frame. 
+
+def compute_rot_matrix(ax1,ay1,az1):
+    vector1 = [ax1[0],ay1[0],az1[0]]        # extract initial acc vector
+    print(vector1)
+    desired_frame = [0,0,-1]                # g force only in z direction
+
+    vector1 = vector1 / np.linalg.norm(vector1)
+    desired_frame = desired_frame / np.linalg.norm(desired_frame)
+
+     # Calculate rotation axis using cross product - 
+    rotation_axis = np.cross(vector1, desired_frame)
+
+    rotation_axis /= np.linalg.norm(rotation_axis)  # Normalize rotation axis
+
+    # Calculate rotation angle
+    dot_product = np.dot(vector1, desired_frame)
+
+    rotation_angle = np.arccos(dot_product)
+
+    
+    # Construct rotation matrix using Rodrigues' formula
+    skew_symmetric = np.array([[0, -rotation_axis[2], rotation_axis[1]],
+                               [rotation_axis[2], 0, -rotation_axis[0]],
+                               [-rotation_axis[1], rotation_axis[0], 0]])
+    
+    rotation_matrix = np.eye(3) + np.sin(rotation_angle) * skew_symmetric + \
+                      (1 - np.cos(rotation_angle)) * np.dot(skew_symmetric, skew_symmetric)
+    
+    ## Convert all vectors to desired frame
+    for i in range(0,len(ax1)):
+        vector_i = [ax1[i],ay1[i],az1[i]] 
+        vectori_des = np.dot(vector_i,rotation_matrix)
+        ax1[i] = vectori_des[0]
+        ay1[i] = vectori_des[1]
+        az1[i] = vectori_des[2]
+    return ax1,ay1,az1
+
+ax1,ay1,az1 = compute_rot_matrix(ax1,ay1,az1)
+ax2,ay2,az2 = compute_rot_matrix(ax2,ay2,az2)
+ax3,ay3,az3 = compute_rot_matrix(ax3,ay3,az3)
+
+# rot_matrix2 = compute_rot_matrix(ax2,ay2,az2)
+# rot_matrix3 = compute_rot_matrix(ax3,ay3,az3)
+# print("rotmat", rot_matrix1,rot_matrix2,rot_matrix3)
+# check1 = np.dot([ax1[0],ay1[0],az1[0]],rot_matrix1)
+# check2 = np.dot([ax2[0],ay2[0],az2[0]],rot_matrix2)
+# check3 = np.dot([ax3[0],ay3[0],az3[0]],rot_matrix3)
+# print("check", check1,check2,check3)
+
 def euler(accelerations, timestamps):
     velocities = [0.0]  # Initial velocity at timestamp 0
     positions = [0.0]    # Initial position at timestamp 0
     time_diff = np.diff(timestamps)  # Calculate time differences
 
-    print(time_diff)
     for i in range(1,len(accelerations)):
         # Assuming constant acceleration between irregular timestamps
         delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
@@ -89,8 +139,6 @@ def euler(accelerations, timestamps):
     positions_array = np.array(positions)
     velocities_array = velocities_array[:len(velocities_array)]
     positions_array = positions_array[:len(positions_array)]
-    print(velocities_array)
-    print(positions_array)
 
     return velocities_array, positions_array
 
@@ -105,8 +153,9 @@ vx3, px3 = euler(ax3,t)
 vy3, py3 = euler(ay3,t)
 vz3, pz3 = euler(az3,t)
 
+
 #from initial position
-initial_pos1 = np.array([0,0.2,0.0])  # placed 0.2m from ground, but assume foot
+initial_pos1 = np.array([0,0.2,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
 initial_pos2 = np.array([0,0.2,0.55]) # placed 0.6m from ground
 initial_pos3 = np.array([0,0,1.05]) # placed 1.1m from ground
 px1 = initial_pos1[0] - px1
@@ -118,6 +167,7 @@ pz2 = initial_pos2[2] - pz2
 px3 = initial_pos3[0] - px3
 py3 = initial_pos3[1] - py3
 pz3 = initial_pos3[2] - pz3
+
 
 print(pz1)
 print(pz2)
