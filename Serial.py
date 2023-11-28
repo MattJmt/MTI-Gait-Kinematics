@@ -82,7 +82,7 @@ def euler(accelerations, timestamps):
         # Calculate position using velocity and Euler's method
 
 
-        new_position = positions[-1] + velocities[-1] * delta_t
+        new_position = positions[-1] + velocities[-1] * delta_t * 9.81
         positions.append(new_position)
 
     # Convert velocity and position lists to NumPy arrays
@@ -107,9 +107,9 @@ vy3, py3 = euler(ay3,t)
 vz3, pz3 = euler(az3,t)
 
 #from initial position
-initial_pos1 = np.array([0,0.5,0.2])
-initial_pos2 = np.array([0,0.5,0.55])
-initial_pos3 = np.array([0,0,1.1])
+initial_pos1 = np.array([0,0.2,0.0])  # placed 0.2m from ground, but assume foot
+initial_pos2 = np.array([0,0.2,0.55]) # placed 0.6m from ground
+initial_pos3 = np.array([0,0,1.05]) # placed 1.1m from ground
 px1 = initial_pos1[0] - px1
 py1 = initial_pos1[1] - py1
 pz1 = initial_pos1[2] - pz1

@@ -24,9 +24,12 @@ def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
     return x, y, z
 
 time_list = t
-x_lists = [px1, px2, px3, px2_left, px1_left]
-y_lists = [py1, py2, py3, py2_left, py1_left]
-z_lists = [pz1, pz2, pz3, pz2_left, pz1_left]
+x_lists = [px1, px3, px2]
+y_lists = [py1, py3, py2]
+z_lists = [pz1, pz3, pz2]
+# x_lists = [px1, px2, px3, px2_left, px1_left]
+# y_lists = [py1, py2, py3, py2_left, py1_left]
+# z_lists = [pz1, pz2, pz3, pz2_left, pz1_left]
 
 # Number of joints
 num_joints = len(x_lists)
