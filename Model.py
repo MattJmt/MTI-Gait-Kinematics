@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
-from Serial import t, px1, px2, px3, py1, py2, py3, pz1, pz2, pz3
+from Serial import t, p1,p2,p3
 
-# initiate other legs
-px1_left = -px1
-py1_left = -py1
-pz1_left =  pz1
-px2_left = -px2
-py2_left = -py2
-pz2_left = pz2
+# initiate other joints, a half a period later
+px1_left = -p1[:,0]
+py1_left = -p1[:,1]
+pz1_left =  p1[:,2]
+px2_left = -p2[:,0]
+py2_left = -p2[:,1]
+pz2_left = p2[:,2]
 
 # Function to generate joint positions using externally provided lists
 def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
@@ -24,12 +24,9 @@ def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
     return x, y, z
 
 time_list = t
-x_lists = [px1, px2, px3]
-y_lists = [py1, py2, py3]
-z_lists = [pz1, pz2, pz3]
-# x_lists = [px1, px2, px3, px2_left, px1_left]
-# y_lists = [py1, py2, py3, py2_left, py1_left]
-# z_lists = [pz1, pz2, pz3, pz2_left, pz1_left]
+x_lists = [p1[:,0], p2[:,0], p3[:,0],px2_left, px1_left]
+y_lists = [p1[:,1], p2[:,1], p3[:,1],py2_left, py1_left]
+z_lists = [p1[:,2], p2[:,2], p3[:,2],pz2_left, pz1_left]
 
 # Number of joints
 num_joints = len(x_lists)
@@ -83,7 +80,7 @@ azimuth_slider.on_changed(update_view)
 frames_per_second = 10  # For example, 10 frames per second
 duration_of_animation = t[-1]  # Duration of the animation in seconds
 frames = int(frames_per_second * duration_of_animation)
-frames = min(len(px1), len(px2), len(px3))  # Number of frames (assumes equal lengths for all joints)
+frames = min(len(p1), len(p2), len(p3))  # Number of frames (assumes equal lengths for all joints)
 animation = FuncAnimation(fig, update, frames=frames, interval = 1000/frames_per_second, blit=True)
 
 # Display the animation

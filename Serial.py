@@ -101,6 +101,68 @@ check3 = np.dot(a3[0],rot_mat3)
 print("check", check1,check2,check3)
 print(a1_des[0],a2_des[0],a3_des[0])
 
+def euler(accelerations, timestamps):
+    initial_vel = np.array([0.0, 0.0, 0.0])  # Initial velocity at timestamp 0
+    initial_pos = np.array([0.0, 0.0, 0.0])    # Initial position at timestamp 0
+    time_diff = np.diff(timestamps)  # Calculate time differences
+
+    vel_array = [initial_vel]
+    pos_array = [initial_pos]
+    for i in range(1,len(accelerations)):
+        # Assuming constant acceleration between irregular timestamps
+        delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
+
+        # Calculate velocity using Euler's method
+        new_velocity = (accelerations[i] - accelerations[i-1]) * delta_t * 9.81
+        print(i, "new vel ",new_velocity)
+        vel_array += [new_velocity]
+        velocities = np.vstack(vel_array)
+
+        # Calculate position using velocity and Euler's method
+
+
+        #new_position = positions[-1] + velocities[-1] * delta_t * 9.81
+        #positions = np.append(positions, new_position)
+        new_pos = pos_array[-1] + velocities[-1] * delta_t * 9.81
+        print(i, "new pos ",new_pos)
+
+        pos_array += [new_pos]
+        positions = np.vstack(pos_array)
+
+    return velocities, positions
+
+    # for i in range(0,len(accelerations)):
+    #     # Euler method to update velocity and position
+    #     delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
+
+    #     new_velocity = vel_array[-1] + accelerations[i] * delta_t
+    #     new_position = pos_array[-1] + vel_array[-1] * delta_t
+        
+    #     # Append updated velocity and position to the lists
+    #     vel_array.append(new_velocity)
+    #     pos_array.append(new_position)
+    # vel_array = vel_array[:-1]
+    # # Return velocity and position data
+    # return np.array(vel_array), np.array(pos_array)
+
+## Velocities
+v1, p1 = euler(a1,t)     # IMU 1
+v2, p2 = euler(a2,t)    
+v3, p3 = euler(a3,t)
+
+
+print(v1, len(v1), p1, len(p1))
+
+#from initial position
+initial_pos1 = np.array([0.2,0,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
+initial_pos2 = np.array([0.2,0,0.55]) # placed 0.6m from ground
+initial_pos3 = np.array([0,0,1.05]) # placed 1.1m from ground
+p1 = initial_pos1 - p1
+p2 = initial_pos2 - p2
+p3 = initial_pos3 - p3
+
+
+## Plot Accelerations
 imu_acc = [a1[:,0],a1[:,1],a1[:,2],a2[:,0],a2[:,1],a2[:,2],a3[:,0],a3[:,1],a3[:,2]]
 imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3']
 
@@ -113,78 +175,11 @@ plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
 plt.grid(True)
 plt.show()
 
-def euler(accelerations, timestamps):
-    velocities = [0.0]  # Initial velocity at timestamp 0
-    positions = [0.0]    # Initial position at timestamp 0
-    time_diff = np.diff(timestamps)  # Calculate time differences
-
-    for i in range(1,len(accelerations)):
-        # Assuming constant acceleration between irregular timestamps
-        delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
-
-        # Calculate velocity using Euler's method
-        #new_velocity = velocities[-1] + (accelerations[i]/accelerations[0]) * delta_t
-        new_velocity = (accelerations[i] - accelerations[i-1]) * delta_t * 9.81
-        velocities.append(new_velocity)
-
-        # Calculate position using velocity and Euler's method
-
-
-        new_position = positions[-1] + velocities[-1] * delta_t * 9.81
-        positions.append(new_position)
-
-    # Convert velocity and position lists to NumPy arrays
-    velocities_array = np.array(velocities)
-    positions_array = np.array(positions)
-    velocities_array = velocities_array[:len(velocities_array)]
-    positions_array = positions_array[:len(positions_array)]
-
-    return velocities_array, positions_array
-
-## Velocities
-vx1, px1 = euler(ax1,t)     # IMU 1
-vy1, py1 = euler(ay1,t)
-vz1, pz1 = euler(az1,t)
-vx2, px2 = euler(ax2,t)
-vy2, py2 = euler(ay2,t)
-vz2, pz2 = euler(az2,t)     
-vx3, px3 = euler(ax3,t)
-vy3, py3 = euler(ay3,t)
-vz3, pz3 = euler(az3,t)
-
-#from initial position
-initial_pos1 = np.array([0,0.2,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
-initial_pos2 = np.array([0,0.2,0.55]) # placed 0.6m from ground
-initial_pos3 = np.array([0,0,1.05]) # placed 1.1m from ground
-px1 = initial_pos1[0] - px1
-py1 = initial_pos1[1] - py1
-pz1 = initial_pos1[2] - pz1
-px2 = initial_pos2[0] - px2
-py2 = initial_pos2[1] - py2
-pz2 = initial_pos2[2] - pz2
-px3 = initial_pos3[0] - px3
-py3 = initial_pos3[1] - py3
-pz3 = initial_pos3[2] - pz3
-
-
-## Plot Accelerations
-imu_acc = [ax1,ay1,az1,ax2,ay2,az2,ax3,ay3,az3]
-imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3']
-
-for i in range(0,len(imu_acc)):
-    plt.plot(t,imu_acc[i], label = imu_acc_label[i], linewidth = 1)
-plt.xlabel('Time (s)')
-plt.ylabel('Acceleration (m/s^2)')
-plt.title('IMU Accelerations')
-plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
-plt.grid(True)
-plt.show()
-
 ## Plot Velocities
-imu_vel = [vx1,vy1,vz1,vx2,vy2,vz2,vx3,vy3,vz3]
+imu_vel = [v1[:,0],v1[:,1],v1[:,2],v2[:,0],v2[:,1],v2[:,2],v3[:,0],v3[:,1],v3[:,2]]
 imu_vel_label = ['vx1','vy1','vz1','vx2','vy2','vz2','vx3','vy3','vz3']
+#t = t[:-1]          # remove 1 time index due to integration
 
-# plot of all IMU readings
 for i in range(0,len(imu_vel)):
     plt.plot(t,imu_vel[i], label = imu_vel_label[i], linewidth = 1)
 plt.xlabel('Time (s)')
@@ -195,10 +190,9 @@ plt.grid(True)
 plt.show()
 
 ## Plot Positions
-imu_pos = [px1,py1,pz1,px2,py2,pz2,px3,py3,pz3]
+imu_pos = [p1[:,0],p1[:,1],p1[:,2],p2[:,0],p2[:,1],p2[:,2],p3[:,0],p3[:,1],p3[:,2]]
 imu_pos_label = ['px1','py1','pz1','px2','py2','pz2','px3','py3','pz3']
-
-# plot of all IMU readings
+#t = t[:-1]          # remove 1 time index due to integration
 for i in range(0,len(imu_pos)):
     plt.plot(t,imu_pos[i], label = imu_pos_label[i], linewidth = 1)
 plt.xlabel('Time (s)')
