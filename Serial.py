@@ -21,11 +21,7 @@ try:
             if data:
                 print("Received:", data)
                 data_saved_string += [data.split(",")]
-                #data_saved += [data_saved_string.astype(float)]
                 
-                # # data_saved_string = np.append(data_saved,data.split(","))
-                # data_saved = np.append(data_saved,data_saved_string.astype(float))
-                # plt.plot(data_saved[0],data_saved[1])
             # Add a small delay to not overload the serial port
             #time.sleep(0.1)
 
@@ -51,25 +47,21 @@ def convert_strings_to_floats(input_array):
 
 output_array = convert_strings_to_floats(data_saved_string)
 output_array = output_array[1:]
+
 ## Accelerations
-t = output_array[:,0]       #time
-ax1 = output_array[:,1]     # IMU 1
-ay1 = output_array[:,2]
-az1 = output_array[:,3]     # IMU 2
-ax2 = output_array[:,4]
-ay2 = output_array[:,5]
-az2 = output_array[:,6]
-ax3 = output_array[:,7]     # IMU 3
-ay3 = output_array[:,8]
-az3 = output_array[:,9]
+t = output_array[:,0]           # time
+a1 = output_array[:,1:4]        # IMU 1 acc vector
+a2 = output_array[:,4:7]        # IMU 2 acc vector
+a3 = output_array[:,7:10]       # IMU 3 acc vector
 
 ## rotation matrix
 # convert raw xyz accelerations to intertial frame. 
 
-def compute_rot_matrix(ax1,ay1,az1):
-    vector1 = [ax1[0],ay1[0],az1[0]]        # extract initial acc vector
-    print(vector1)
-    desired_frame = [0,0,-1]                # g force only in z direction
+def compute_rot_matrix(a1):
+    vector1 = a1[0]        # extract initial acc vector
+    print("raw vector ",vector1)
+    desired_frame = np.array([0,0,-1])                # g force only in z direction
+    print("des vector ", desired_frame)
 
     vector1 = vector1 / np.linalg.norm(vector1)
     desired_frame = desired_frame / np.linalg.norm(desired_frame)
@@ -81,10 +73,8 @@ def compute_rot_matrix(ax1,ay1,az1):
 
     # Calculate rotation angle
     dot_product = np.dot(vector1, desired_frame)
-
     rotation_angle = np.arccos(dot_product)
 
-    
     # Construct rotation matrix using Rodrigues' formula
     skew_symmetric = np.array([[0, -rotation_axis[2], rotation_axis[1]],
                                [rotation_axis[2], 0, -rotation_axis[0]],
@@ -92,27 +82,36 @@ def compute_rot_matrix(ax1,ay1,az1):
     
     rotation_matrix = np.eye(3) + np.sin(rotation_angle) * skew_symmetric + \
                       (1 - np.cos(rotation_angle)) * np.dot(skew_symmetric, skew_symmetric)
+    print("rot mat ", rotation_matrix)
     
     ## Convert all vectors to desired frame
-    for i in range(0,len(ax1)):
-        vector_i = [ax1[i],ay1[i],az1[i]] 
-        vectori_des = np.dot(vector_i,rotation_matrix)
-        ax1[i] = vectori_des[0]
-        ay1[i] = vectori_des[1]
-        az1[i] = vectori_des[2]
-    return ax1,ay1,az1
+    for i in range(0,len(a1)):
+        vector_i = a1[i] 
+        vectori_des = np.dot(rotation_matrix, vector_i)
+        a1[i] = vectori_des
+    return a1, rotation_matrix
 
-ax1,ay1,az1 = compute_rot_matrix(ax1,ay1,az1)
-ax2,ay2,az2 = compute_rot_matrix(ax2,ay2,az2)
-ax3,ay3,az3 = compute_rot_matrix(ax3,ay3,az3)
+a1_des, rot_mat1 = compute_rot_matrix(a1)
+a2_des, rot_mat2 = compute_rot_matrix(a2)
+a3_des, rot_mat3 = compute_rot_matrix(a3)
 
-# rot_matrix2 = compute_rot_matrix(ax2,ay2,az2)
-# rot_matrix3 = compute_rot_matrix(ax3,ay3,az3)
-# print("rotmat", rot_matrix1,rot_matrix2,rot_matrix3)
-# check1 = np.dot([ax1[0],ay1[0],az1[0]],rot_matrix1)
-# check2 = np.dot([ax2[0],ay2[0],az2[0]],rot_matrix2)
-# check3 = np.dot([ax3[0],ay3[0],az3[0]],rot_matrix3)
-# print("check", check1,check2,check3)
+check1 = np.dot(a1[0],rot_mat1)
+check2 = np.dot(a2[0],rot_mat2)
+check3 = np.dot(a3[0],rot_mat3)
+print("check", check1,check2,check3)
+print(a1_des[0],a2_des[0],a3_des[0])
+
+imu_acc = [a1[:,0],a1[:,1],a1[:,2],a2[:,0],a2[:,1],a2[:,2],a3[:,0],a3[:,1],a3[:,2]]
+imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3']
+
+for i in range(0,len(imu_acc)):
+    plt.plot(t,imu_acc[i], label = imu_acc_label[i], linewidth = 1)
+plt.xlabel('Time (s)')
+plt.ylabel('Acceleration (m/s^2)')
+plt.title('IMU Accelerations')
+plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
+plt.grid(True)
+plt.show()
 
 def euler(accelerations, timestamps):
     velocities = [0.0]  # Initial velocity at timestamp 0
@@ -153,7 +152,6 @@ vx3, px3 = euler(ax3,t)
 vy3, py3 = euler(ay3,t)
 vz3, pz3 = euler(az3,t)
 
-
 #from initial position
 initial_pos1 = np.array([0,0.2,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
 initial_pos2 = np.array([0,0.2,0.55]) # placed 0.6m from ground
@@ -169,21 +167,6 @@ py3 = initial_pos3[1] - py3
 pz3 = initial_pos3[2] - pz3
 
 
-print(pz1)
-print(pz2)
-print(pz3)
-
-# ## Positions
-# px1 = euler(vx1,t)     # IMU 1
-# py1 = euler(vy1,t)
-# pz1 = euler(vz1,t)
-# px2 = euler(vx2,t)
-# py2 = euler(vy2,t)
-# pz2 = euler(vz2,t)     
-# px3 = euler(vx3,t)
-# py3 = euler(vy3,t)
-# pz3 = euler(vz3,t)
-
 ## Plot Accelerations
 imu_acc = [ax1,ay1,az1,ax2,ay2,az2,ax3,ay3,az3]
 imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3']
@@ -193,7 +176,7 @@ for i in range(0,len(imu_acc)):
 plt.xlabel('Time (s)')
 plt.ylabel('Acceleration (m/s^2)')
 plt.title('IMU Accelerations')
-plt.legend(loc = "upper right")
+plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
 plt.grid(True)
 plt.show()
 
@@ -207,7 +190,7 @@ for i in range(0,len(imu_vel)):
 plt.xlabel('Time (s)')
 plt.ylabel('Velocity (m/s)')
 plt.title('IMU Velocities')
-plt.legend(loc = "upper right")
+plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
 plt.grid(True)
 plt.show()
 
@@ -221,6 +204,6 @@ for i in range(0,len(imu_pos)):
 plt.xlabel('Time (s)')
 plt.ylabel('Position m')
 plt.title('IMU Positions')
-plt.legend(loc = "upper right")
+plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
 plt.grid(True)
 plt.show()

@@ -39,7 +39,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.set_xlim([-1.5, 1.5])  # Adjust the x-axis limits as needed
 ax.set_ylim([-1.5, 1.5])  # Adjust the y-axis limits as needed
-ax.set_zlim([0, 1.2])  # Adjust the z-axis limits as needed
+ax.set_zlim([0, 2])  # Adjust the z-axis limits as needed
 ax.set_xlabel('X-axis')
 ax.set_ylabel('Y-axis')
 ax.set_zlabel('Z-axis')
