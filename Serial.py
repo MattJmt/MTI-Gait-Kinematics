@@ -113,45 +113,21 @@ def euler(accelerations, timestamps):
         delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
 
         # Calculate velocity using Euler's method
-        new_velocity = (accelerations[i] - accelerations[i-1]) * delta_t * 9.81
-        print(i, "new vel ",new_velocity)
+        new_velocity = (accelerations[i]-accelerations[i-1]) * delta_t * 9.81
         vel_array += [new_velocity]
         velocities = np.vstack(vel_array)
 
         # Calculate position using velocity and Euler's method
-
-
-        #new_position = positions[-1] + velocities[-1] * delta_t * 9.81
-        #positions = np.append(positions, new_position)
         new_pos = pos_array[-1] + velocities[-1] * delta_t * 9.81
-        print(i, "new pos ",new_pos)
-
         pos_array += [new_pos]
         positions = np.vstack(pos_array)
 
     return velocities, positions
 
-    # for i in range(0,len(accelerations)):
-    #     # Euler method to update velocity and position
-    #     delta_t = time_diff[i] if i < len(time_diff) else time_diff[-1]  # Last time diff for extrapolation
-
-    #     new_velocity = vel_array[-1] + accelerations[i] * delta_t
-    #     new_position = pos_array[-1] + vel_array[-1] * delta_t
-        
-    #     # Append updated velocity and position to the lists
-    #     vel_array.append(new_velocity)
-    #     pos_array.append(new_position)
-    # vel_array = vel_array[:-1]
-    # # Return velocity and position data
-    # return np.array(vel_array), np.array(pos_array)
-
 ## Velocities
 v1, p1 = euler(a1,t)     # IMU 1
 v2, p2 = euler(a2,t)    
 v3, p3 = euler(a3,t)
-
-
-print(v1, len(v1), p1, len(p1))
 
 #from initial position
 initial_pos1 = np.array([0.2,0,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center

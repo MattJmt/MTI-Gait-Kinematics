@@ -1,15 +1,33 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
-from Serial import t, p1,p2,p3
+from Serial import t, p1,p2,p3, initial_pos1, initial_pos2
 
 # initiate other joints, a half a period later
-px1_left = -p1[:,0]
-py1_left = -p1[:,1]
-pz1_left =  p1[:,2]
-px2_left = -p2[:,0]
-py2_left = -p2[:,1]
-pz2_left = p2[:,2]
+print(p2, len(p2))
+time_index = []
+time_i = []
+for i in range(0,len(p2)):
+    if p2[i,1] < 0 and p2[i-1,1] > 0:
+        time_index += [[t[i],i]]
+
+
+print("time index", time_index)
+
+for i in range(0,len(time_index)):
+    if time_index[i][0] > 3:
+        time_i = time_index[i]
+        break
+print(time_i)
+gait_start_i = time_i[1]
+
+
+no_moving1 = np.full((gait_start_i,3),initial_pos1)         # create array with initial position 1 for duration of leg to complete half a period
+no_moving2 = np.full((gait_start_i,3),initial_pos2)
+p1_left = np.vstack((no_moving1, p1[:-gait_start_i]))        # join "waiting" array with start of right leg array, and remove end of right leg array corresponding to length of "waiting" array
+p2_left = np.vstack((no_moving2, p2[:-gait_start_i]))
+print("p2 left ", p2_left, len(p2_left))
 
 # Function to generate joint positions using externally provided lists
 def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
@@ -24,9 +42,9 @@ def generate_joint_positions(x_lists, y_lists, z_lists, joint_index, frame):
     return x, y, z
 
 time_list = t
-x_lists = [p1[:,0], p2[:,0], p3[:,0],px2_left, px1_left]
-y_lists = [p1[:,1], p2[:,1], p3[:,1],py2_left, py1_left]
-z_lists = [p1[:,2], p2[:,2], p3[:,2],pz2_left, pz1_left]
+x_lists = [p1[:,0], p2[:,0], p3[:,0], -p2_left[:,0], -p1_left[:,0]]     # -x for symmetry of left leg
+y_lists = [p1[:,1], p2[:,1], p3[:,1], p2_left[:,1], p1_left[:,1]]
+z_lists = [p1[:,2], p2[:,2], p3[:,2], p2_left[:,2], p1_left[:,2]]
 
 # Number of joints
 num_joints = len(x_lists)
@@ -42,8 +60,6 @@ ax.set_ylabel('Y-axis')
 ax.set_zlabel('Z-axis')
 ax.set_title('3D Animation of Joints')
 
-# # Initialize empty lines for the joints
-# lines = [ax.plot([], [], [], marker='o', markersize=5)[0] for _ in range(num_joints)]
 # Initialize empty lines for the joints
 lines = [ax.plot([], [], [], marker='o')[0] for _ in range(num_joints-1)]
 
@@ -53,8 +69,7 @@ time_text = ax.text2D(0.05, 0.95, '', transform=ax.transAxes)
 def update(frame):
     for i in range(num_joints):
         x, y, z = generate_joint_positions(x_lists, y_lists, z_lists, i, frame)
-        # lines[i].set_data([x], [y])
-        # lines[i].set_3d_properties([z])
+
         if i > 0:
             # Update lines to connect the joints
             lines[i - 1].set_data([x_lists[i - 1][frame], x_lists[i][frame]], [y_lists[i - 1][frame], y_lists[i][frame]])
