@@ -129,6 +129,18 @@ v1, p1 = euler(a1,t)     # IMU 1
 v2, p2 = euler(a2,t)    
 v3, p3 = euler(a3,t)
 
+# put ceilings for smoother animation
+positions = [p1,p2,p3]
+for k in range(0,len(positions)):
+    for i in range(0,len(p1)):
+        for j in range(0,len(p1[i])):
+            if positions[k][i,j] > 0.25:
+                positions[k][i,j] = 0.25
+            if positions[k][i,j] < -0.25:
+                positions[k][i,j] = -0.25
+            if i > 0 and abs(positions[k][i,j] - positions[k][i-1,j]) < 0.005:
+                positions[k][i,j] = positions[k][i-1,j]
+
 #from initial position
 initial_pos1 = np.array([0.2,0,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
 initial_pos2 = np.array([0.2,0,0.55]) # placed 0.6m from ground
