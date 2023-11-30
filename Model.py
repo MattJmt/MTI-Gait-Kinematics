@@ -100,5 +100,5 @@ frames = int(frames_per_second * duration_of_animation)
 frames = min(len(p1), len(p2), len(p3))  # Number of frames (assumes equal lengths for all joints)
 ani = animation.FuncAnimation(fig, update, frames=frames, interval = 1000/frames_per_second, blit=True)
 writer1 = animation.PillowWriter(fps=30)  # Create a PillowWriter instance
-ani.save('Walking_animation.gif', writer=writer1)
+ani.save('Walking_animation8.gif', writer=writer1)
 plt.show()
