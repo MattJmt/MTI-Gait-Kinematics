@@ -8,10 +8,8 @@ from scipy import signal
 # Define CSV filename
 filename = "data3.csv"
 
-# Replace 'COM3' with the appropriate port name for your system (e.g., '/dev/ttyUSB0' on Linux or 'COM3' on Windows)
+# Replace 'COM4' with the appropriate port name for your system (e.g., '/dev/ttyUSB0' on Linux or 'COM4' on Windows)
 ser = serial.Serial('COM4', 9600, timeout=1)  # Open serial port with baud rate 9600
-# data_saved_string = np.array([])
-# data_saved = np.array([])
 data_saved = np.array([])
 data_saved_string = []
 try:
@@ -24,9 +22,6 @@ try:
             if data:
                 print("Received:", data)
                 data_saved_string += [data.split(",")]
-                
-            # Add a small delay to not overload the serial port
-            #time.sleep(0.1)
 
 except KeyboardInterrupt:
     print("Keyboard Interrupt. Closing serial port.")
@@ -35,6 +30,7 @@ except serial.SerialException as e:
     print("Serial Exception:", e)
     ser.close()  # Close the serial port if an exception occurs
 
+# convert the strings from the serial port to floats
 def convert_strings_to_floats(input_array):
     output_array = np.array([])
     array_list = []
@@ -51,23 +47,20 @@ def convert_strings_to_floats(input_array):
 output_array = convert_strings_to_floats(data_saved_string)
 output_array = output_array[1:]
 
-## Accelerations
+# Extract raw accelerations
 t = output_array[:,0]           # time
 a1 = output_array[:,1:4]        # IMU 1 acc vector
 a2 = output_array[:,4:7]        # IMU 2 acc vector
 a3 = output_array[:,7:10]       # IMU 3 acc vector
 
-## rotation matrix
 # convert raw xyz accelerations to intertial frame. 
-
 def compute_rot_matrix(a1):
     vector1 = a1[0]        # extract initial acc vector
-    print("raw vector ",vector1)
     desired_frame = np.array([0,0,-1])                # g force only in z direction
-    print("des vector ", desired_frame)
-
-    vector1 = vector1 / np.linalg.norm(vector1)
-    desired_frame = desired_frame / np.linalg.norm(desired_frame)
+    
+    # normalise the vectors
+    vector1 /= np.linalg.norm(vector1)
+    desired_frame /= np.linalg.norm(desired_frame)
 
      # Calculate rotation axis using cross product - 
     rotation_axis = np.cross(vector1, desired_frame)
@@ -85,7 +78,6 @@ def compute_rot_matrix(a1):
     
     rotation_matrix = np.eye(3) + np.sin(rotation_angle) * skew_symmetric + \
                       (1 - np.cos(rotation_angle)) * np.dot(skew_symmetric, skew_symmetric)
-    print("rot mat ", rotation_matrix)
     
     ## Convert all vectors to desired frame
     for i in range(0,len(a1)):
@@ -98,11 +90,12 @@ a1_des, rot_mat1 = compute_rot_matrix(a1)
 a2_des, rot_mat2 = compute_rot_matrix(a2)
 a3_des, rot_mat3 = compute_rot_matrix(a3)
 
-check1 = np.dot(a1[0],rot_mat1)
-check2 = np.dot(a2[0],rot_mat2)
-check3 = np.dot(a3[0],rot_mat3)
-print("check", check1,check2,check3)
-print(a1_des[0],a2_des[0],a3_des[0])
+# Check whether rotation matrix succesful
+# check1 = np.dot(a1[0],rot_mat1)
+# check2 = np.dot(a2[0],rot_mat2)
+# check3 = np.dot(a3[0],rot_mat3)
+# print("check", check1,check2,check3)
+# print(a1_des[0],a2_des[0],a3_des[0])
 
 def euler(accelerations, timestamps):
     initial_vel = np.array([0.0, 0.0, 0.0])  # Initial velocity at timestamp 0
@@ -127,6 +120,7 @@ def euler(accelerations, timestamps):
 
     return velocities, positions
 
+# filter the raw accelerations in forward and backward direction with Butterworth 
 def filtfilt(acceleration,CO):
     
     sos = signal.butter(3, CO, 'lp', fs=50, output='sos')
@@ -141,8 +135,8 @@ a1_f = filtfilt(a1,5)
 a2_f = filtfilt(a2,5)
 a3_f = filtfilt(a3,5)
 
-## Velocities and Positions
-v1, p1 = euler(a1_f,t)     # IMU 1
+# Calculate velocity and position vectors using euler approximation
+v1, p1 = euler(a1_f,t)     
 v2, p2 = euler(a2_f,t)    
 v3, p3 = euler(a3_f,t)
 
@@ -150,19 +144,7 @@ v1 = filtfilt(v1,15)
 v2 = filtfilt(v2,15)
 v3 = filtfilt(v3,15)
 
-# # put ceilings for smoother animation
-# positions = [p1,p2,p3]
-# for k in range(0,len(positions)):
-#     for i in range(0,len(p1)):
-#         for j in range(0,len(p1[i])):
-#             if positions[k][i,j] > 0.25:
-#                 positions[k][i,j] = 0.25
-#             if positions[k][i,j] < -0.25:
-#                 positions[k][i,j] = -0.25
-#             if i > 0 and abs(positions[k][i,j] - positions[k][i-1,j]) < 0.01:
-#                 positions[k][i,j] = positions[k][i-1,j]
-
-#from initial position
+# add initial position of sensors on user
 initial_pos1 = np.array([0.2,0,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
 initial_pos2 = np.array([0.2,0,0.55]) # placed 0.6m from ground
 initial_pos3 = np.array([0,0,1.05]) # placed 1.1m from ground
@@ -188,7 +170,6 @@ plt.show()
 ## Plot Velocities
 imu_vel = [v1[:,0],v1[:,1],v1[:,2],v2[:,0],v2[:,1],v2[:,2],v3[:,0],v3[:,1],v3[:,2]]
 imu_vel_label = ['vx1','vy1','vz1','vx2','vy2','vz2','vx3','vy3','vz3']
-#t = t[:-1]          # remove 1 time index due to integration
 
 for i in range(0,len(imu_vel)):
     plt.plot(t,imu_vel[i], label = imu_vel_label[i], linewidth = 1)
@@ -202,7 +183,7 @@ plt.show()
 ## Plot Positions
 imu_pos = [p1[:,0],p1[:,1],p1[:,2],p2[:,0],p2[:,1],p2[:,2],p3[:,0],p3[:,1],p3[:,2]]
 imu_pos_label = ['px1','py1','pz1','px2','py2','pz2','px3','py3','pz3']
-#t = t[:-1]          # remove 1 time index due to integration
+
 for i in range(0,len(imu_pos)):
     plt.plot(t,imu_pos[i], label = imu_pos_label[i], linewidth = 1)
 plt.xlabel('Time (s)')

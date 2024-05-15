@@ -58,7 +58,6 @@ plt.show()
 ## Plot Velocities
 imu_vel = [v1[:,0],v1[:,1],v1[:,2],v2[:,0],v2[:,1],v2[:,2],v3[:,0],v3[:,1],v3[:,2]]
 imu_vel_label = ['vx1','vy1','vz1','vx2','vy2','vz2','vx3','vy3','vz3']
-#t = t[:-1]          # remove 1 time index due to integration
 
 for i in range(3,len(imu_vel)-3):
     plt.plot(t,imu_vel[i], label = imu_vel_label[i], linewidth = 1)
@@ -72,7 +71,7 @@ plt.show()
 ## Plot Positions
 imu_pos = [p1[:,0],p1[:,1],p1[:,2],p2[:,0],p2[:,1],p2[:,2],p3[:,0],p3[:,1],p3[:,2]]
 imu_pos_label = ['px1','py1','pz1','px2','py2','pz2','px3','py3','pz3']
-#t = t[:-1]          # remove 1 time index due to integration
+
 for i in range(3,len(imu_pos)-3):
     plt.plot(t,imu_pos[i], label = imu_pos_label[i], linewidth = 1)
 plt.xlabel('Time (s)')
@@ -83,16 +82,15 @@ plt.grid(True)
 plt.show()
 
 ## EXTRACT NUMBER OF STEPS AND CADENCE
+
+# find peaks of signal above a certain threshold to determine the number of steps
 ax2_peaks, _ = signal.find_peaks(a2_f[:,0], height=0.1)
 ay2_peaks, _ = signal.find_peaks(-a2_f[:,1], height=0.4)
 az2_peaks, _ = signal.find_peaks(a2_f[:,2], height=-0.9)
-print(
-      "ax2_peaks:", len(ax2_peaks),
-      "ay1_peaks:", len(ay2_peaks),
-      "az2_peaks:", len(az2_peaks)
-      )
 
 steps = min(len(ay2_peaks), len(az2_peaks))
+
+# calculate the average period of a step
 sum = 0
 for i in range (0,len(ay2_peaks)-1):
     sum += t[ay2_peaks[i+1]] - t[ay2_peaks[i]]
@@ -121,12 +119,8 @@ for i in range(0,len(time_index)):
     if time_index[i][0] > 2:
         time_i = time_index[i]
         break
-# print(time_i)
 
-# gait_start_i = time_i[1]
 gait_start_i = 15
-
-
 
 # create array with initial position 1 for duration of leg to complete half a period
 no_moving1 = np.full((gait_start_i,3),initial_pos1)         
