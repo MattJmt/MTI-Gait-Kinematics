@@ -1,14 +1,16 @@
-# MTI-Gait-Kinematics
+# MTI Gait Kinematics
 Designing a Wearable Device to monitor gait for Multiple Sclerosis (MS) patients. This device is only a proof-of-concept, having been quickly assembled and coded for my Medical Technology Innovation class. 
 The device extracts step count and step period (cadence) from its user. It also models the gait kinematics using forward kinematics, as shown below.
 
-![Walking_animation](https://github.com/MattJmt/MTI-Gait-Kinematics/assets/80914835/7443b56a-dd0c-46dc-a7e0-6d15879dce6a)
+<img src="https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/Pictures/WalkingTest.gif" width="200"/> <img src="https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/figures/Walking_animation.gif" width="500"/>
+
+
 
 
 
 The [MTI-Report](https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/MTI-Report.pdf)  gives more context to MS and the relevance of such a wearable device to monitor its symptoms. Password to the report available upon request. 
 
-The IMU accelerations are filtered using the ```scipy.signal``` *butter()* and *sosfiltfilt()* functions. 
+The IMU accelerations are read and calibrated in [MPU9250_Calibration.ino](https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/MPU9250_calibration/MPU9250_calibration.ino) and are then filtered using the ```scipy.signal``` *butter()* and *sosfiltfilt()* functions. 
 ![Unfilt and Filt accelerations](https://github.com/MattJmt/MTI-Gait-Kinematics/assets/80914835/6d27883d-429d-45c2-8436-1d108b7f9d3d)
 
 The step count and period are extracted from the knee joint, since it has the cleanest and most reliable signal. This has also been proven in literature. 
