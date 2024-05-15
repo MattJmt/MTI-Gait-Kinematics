@@ -2,8 +2,11 @@ import serial
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
+from scipy import signal
 
-
+# Define CSV filename
+filename = "data3.csv"
 
 # Replace 'COM3' with the appropriate port name for your system (e.g., '/dev/ttyUSB0' on Linux or 'COM3' on Windows)
 ser = serial.Serial('COM4', 9600, timeout=1)  # Open serial port with baud rate 9600
@@ -124,22 +127,40 @@ def euler(accelerations, timestamps):
 
     return velocities, positions
 
-## Velocities
-v1, p1 = euler(a1,t)     # IMU 1
-v2, p2 = euler(a2,t)    
-v3, p3 = euler(a3,t)
+def filtfilt(acceleration,CO):
+    
+    sos = signal.butter(3, CO, 'lp', fs=50, output='sos')
+    acceleration_x_filt = signal.sosfiltfilt(sos, acceleration[:,0])
+    acceleration_y_filt = signal.sosfiltfilt(sos, acceleration[:,1])
+    acceleration_z_filt = signal.sosfiltfilt(sos, acceleration[:,2])
 
-# put ceilings for smoother animation
-positions = [p1,p2,p3]
-for k in range(0,len(positions)):
-    for i in range(0,len(p1)):
-        for j in range(0,len(p1[i])):
-            if positions[k][i,j] > 0.25:
-                positions[k][i,j] = 0.25
-            if positions[k][i,j] < -0.25:
-                positions[k][i,j] = -0.25
-            if i > 0 and abs(positions[k][i,j] - positions[k][i-1,j]) < 0.005:
-                positions[k][i,j] = positions[k][i-1,j]
+    acceleration_filt = np.column_stack((acceleration_x_filt, acceleration_y_filt, acceleration_z_filt))
+    return acceleration_filt
+
+a1_f = filtfilt(a1,5)
+a2_f = filtfilt(a2,5)
+a3_f = filtfilt(a3,5)
+
+## Velocities and Positions
+v1, p1 = euler(a1_f,t)     # IMU 1
+v2, p2 = euler(a2_f,t)    
+v3, p3 = euler(a3_f,t)
+
+v1 = filtfilt(v1,15)
+v2 = filtfilt(v2,15)
+v3 = filtfilt(v3,15)
+
+# # put ceilings for smoother animation
+# positions = [p1,p2,p3]
+# for k in range(0,len(positions)):
+#     for i in range(0,len(p1)):
+#         for j in range(0,len(p1[i])):
+#             if positions[k][i,j] > 0.25:
+#                 positions[k][i,j] = 0.25
+#             if positions[k][i,j] < -0.25:
+#                 positions[k][i,j] = -0.25
+#             if i > 0 and abs(positions[k][i,j] - positions[k][i-1,j]) < 0.01:
+#                 positions[k][i,j] = positions[k][i-1,j]
 
 #from initial position
 initial_pos1 = np.array([0.2,0,0.0])  # placed 0.2m from ground, but assume foot, 0.2m from center
@@ -149,10 +170,11 @@ p1 = initial_pos1 - p1
 p2 = initial_pos2 - p2
 p3 = initial_pos3 - p3
 
-
 ## Plot Accelerations
-imu_acc = [a1[:,0],a1[:,1],a1[:,2],a2[:,0],a2[:,1],a2[:,2],a3[:,0],a3[:,1],a3[:,2]]
-imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3']
+imu_acc = [a1[:,0],a1[:,1],a1[:,2],a2[:,0],a2[:,1],a2[:,2],a3[:,0],a3[:,1],a3[:,2],
+           a1_f[:,0],a1_f[:,1],a1_f[:,2],a2_f[:,0],a2_f[:,1],a2_f[:,2],a3_f[:,0],a3_f[:,1],a3_f[:,2]]
+imu_acc_label = ['ax1','ay1','az1','ax2','ay2','az2','ax3','ay3','az3',
+                 'ax1f','ay1f','az1f','ax2f','ay2f','az2f','ax3f','ay3f','az3f']
 
 for i in range(0,len(imu_acc)):
     plt.plot(t,imu_acc[i], label = imu_acc_label[i], linewidth = 1)
@@ -189,3 +211,20 @@ plt.title('IMU Positions')
 plt.legend(bbox_to_anchor = (1.15, 0.6), loc='center right')
 plt.grid(True)
 plt.show()
+
+# Save the data to a CSV file
+with open(filename, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    # Writing the headers (if you know what each column represents, replace these generic headers)
+    writer.writerow(['Time', 'Acc1_X', 'Acc1_Y', 'Acc1_Z', 'Acc2_X', 'Acc2_Y', 'Acc2_Z', 'Acc3_X', 'Acc3_Y', 'Acc3_Z',
+                     'AccF1_X', 'AccF1_Y', 'AccF1_Z', 'AccF2_X', 'AccF2_Y', 'AccF2_Z', 'AccF3_X', 'AccF3_Y', 'AccF3_Z',
+                     'Vel1_X', 'Vel1_Y', 'Vel1_Z', 'Vel2_X', 'Vel2_Y', 'Vel2_Z', 'Vel3_X', 'Vel3_Y', 'Vel3_Z',
+                     'Pos1_X', 'Pos1_Y', 'Pos1_Z', 'Pos2_X', 'Pos2_Y', 'Pos2_Z', 'Pos3_X', 'Pos3_Y', 'Pos3_Z'])
+    # Write the data
+    for i in range(len(t)):
+        row = [t[i]] + \
+              a1[i].tolist() + a2[i].tolist() + a3[i].tolist() + \
+              a1_f[i].tolist() + a2_f[i].tolist() + a3_f[i].tolist() + \
+              v1[i].tolist() + v2[i].tolist() + v3[i].tolist() + \
+              p1[i].tolist() + p2[i].tolist() + p3[i].tolist()
+        writer.writerow(row)

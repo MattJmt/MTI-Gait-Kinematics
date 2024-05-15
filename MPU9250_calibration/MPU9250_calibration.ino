@@ -22,16 +22,18 @@ void setup() {
   myMPU9250.enableGyrAxes(MPU9250_ENABLE_XYZ);
   myMPU9250.setMagOpMode(AK8963_CONT_MODE_100HZ);
   delay(200);
-   pinMode(IMU_1, OUTPUT);
+#set IMUs as outputs
+pinMode(IMU_1, OUTPUT);
 pinMode(IMU_2, OUTPUT);
 pinMode(IMU_3, OUTPUT);
 digitalWrite(IMU_1,LOW);
 digitalWrite(IMU_2,LOW);
 digitalWrite(IMU_3,LOW);
-//  Serial.print("t, ");
-//  Serial.print("ax1, ");Serial.print("ay1, ");Serial.print("az1, ");  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");
-//  Serial.print("ax2, ");Serial.print("ax2, ");Serial.print("az2, ");  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");
-//  Serial.print("ax3, ");Serial.print("ay3, ");Serial.print("az3, ");Serial.println();  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");Serial.println();
+# set serial port in ideal format to extract in python
+Serial.print("t, ");
+Serial.print("ax1, ");Serial.print("ay1, ");Serial.print("az1, ");  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");
+Serial.print("ax2, ");Serial.print("ax2, ");Serial.print("az2, ");  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");
+Serial.print("ax3, ");Serial.print("ay3, ");Serial.print("az3, ");Serial.println();  //Serial.print("px1, ");Serial.print("py1, ");Serial.print("pz1, ");Serial.println();
 }
 
 int test[9] = {11,12,13,14,15,16,17,18,19};
@@ -40,42 +42,6 @@ float cal[3][12] = {
   {16409, 16380, 16595, 348.3, -40, 95, 1, 1, 1},        // IMU 2
   {16395, 16400, 16635, 294.5, -82.2, -119.7, 1, 1, 1}   // IMU 3
  };
-//int gain_x_1 = 16365;
-//int gain_y_1 = 16398;
-//int gain_z_1 = 16695;
-//int gain_x_2 = 16409;
-//int gain_y_2 = 16380;
-//int gain_z_2 = 16595;
-//int gain_x_3 = 16395;
-//int gain_y_3 = 16400;
-//int gain_z_3 = 16635;
-//int offset_x_1 = 273;
-//int offset_y_1 = 183; 
-//int offset_z_1 = 1118;
-//int offset_x_2 = 348;
-//int offset_y_2 = -40;
-//int offset_z_2 = 95;
-//int offset_x_3 = 295;
-//int offset_y_3 = -82;
-//int offset_z_3 = -120;
-//int p_gain_x_1 = 1;
-//int p_gain_y_1 = 1;
-//int p_gain_z_1 = 1;
-//int p_gain_x_2 = 1;
-//int p_gain_y_2 = 1;
-//int p_gain_z_2 = 1;
-//int p_gain_x_3 = 1;
-//int p_gain_y_3 = 1;
-//int p_gain_z_3 = 1;
-//int p_offset_x_1 = 0;
-//int p_offset_y_1 = 0;
-//int p_offset_z_1 = 0;
-//int p_offset_x_2 = 0;
-//int p_offset_y_2 = 0;
-//int p_offset_z_2 = 0;
-//int p_offset_x_3 = 0;
-//int p_offset_y_3 = 0;
-//int p_offset_z_3 = 0;
 
 unsigned long previousMillis = 0;
 void loop() {
@@ -145,9 +111,9 @@ void loop() {
 //  gyrz_3 = (values[2][5]-cal[2][11]) / cal[2][8];
 
   Serial.print(t);Serial.print(",");
-  Serial.print(accx_1);Serial.print(",");Serial.print(accy_1);Serial.print(",");Serial.print(accz_1);Serial.print(","); //Serial.print(" ");Serial.print(gyrx_1);Serial.print(" ");Serial.print(gyry_1);Serial.print(" ");Serial.print(gyrz_1);Serial.print(" ");
-  Serial.print(accx_2);Serial.print(",");Serial.print(accy_2);Serial.print(",");Serial.print(accz_2);Serial.print(","); //Serial.print(" ");Serial.print(gyrx_1);Serial.print(" ");Serial.print(gyry_1);Serial.print(" ");Serial.print(gyrz_1);Serial.print(" ");
-  Serial.print(accx_3);Serial.print(",");Serial.print(accy_3);Serial.print(",");Serial.print(accz_3); //Serial.print(" ");Serial.print(gyrx_1);Serial.print(" ");Serial.print(gyry_1);Serial.print(" ");Serial.print(gyrz_1);Serial.print(" ");
+  Serial.print(accx_1);Serial.print(",");Serial.print(accy_1);Serial.print(",");Serial.print(accz_1);Serial.print(",");
+  Serial.print(accx_2);Serial.print(",");Serial.print(accy_2);Serial.print(",");Serial.print(accz_2);Serial.print(","); 
+  Serial.print(accx_3);Serial.print(",");Serial.print(accy_3);Serial.print(",");Serial.print(accz_3); 
   Serial.println();
   
 //
