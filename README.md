@@ -1,5 +1,5 @@
 # MTI Gait Kinematics
-Designing a Wearable Device to monitor gait for Multiple Sclerosis (MS) patients. This device is a proof-of-concept, having been quickly assembled and coded for my Medical Technology Innovation class. 
+Designing a wearable device to monitor gait for Multiple Sclerosis (MS) patients for my Medical Technology Innovation class. 
 The device extracts step count and step period (cadence) from its user. It also models the gait kinematics using forward kinematics, as shown below.
 
 <img src="https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/Pictures/WalkingTest.gif" width="170"/> <img src="https://github.com/MattJmt/MTI-Gait-Kinematics/blob/main/figures/Walking_animation.gif" width="425"/>
