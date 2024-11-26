@@ -19,4 +19,4 @@ The step count and period are extracted from the knee joint, since it has the cl
 
 Future improvements include:
   - transitioning from the i2c cable communication to wireless bluetooth
-  - adding ml to detect more detailed gait metrics for different users (eg. step height, knee/hip angularextension,...), and correlating them to heart rate (ECG), muscle activity (EMG), and other physiological measurements as well as professional health practitioners diagnoses.
+  - adding ml to detect more detailed gait metrics for different users (eg. step height, knee/hip angular extension,...), and correlating them to heart rate (ECG), muscle activity (EMG), and other physiological measurements as well as professional health practitioners diagnoses.
